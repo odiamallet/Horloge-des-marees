@@ -832,12 +832,12 @@ function buildAddPageDom(){
       return;
     }
     savedSites.push({id, name, ...(siteLatLon(siteById[id]) || {})});
+    activeIndex = savedSites.length - 1; // pointe déjà sur le site qu'on vient d'ajouter
     persistSavedSites();
     input.value = '';
     addMsg.textContent = '';
     closeSuggestions();
-    renderCarousel();
-    setTimeout(()=> scrollToIndex(savedSites.length-1), 60);
+    renderCarousel(); // se charge elle-même de défiler jusqu'à activeIndex, une seule fois
   }
 
   function closeSuggestions(){
@@ -946,7 +946,10 @@ function scrollToIndex(i, smooth){
   const carousel = $('#carousel');
   const page = carousel.children[i];
   if(!page) return;
-  carousel.scrollTo({left: page.offsetLeft - 18, behavior: smooth===false ? 'auto' : 'smooth'});
+  // scrollIntoView respecte nativement scroll-snap-align:center défini sur
+  // .carousel-page — contrairement à un calcul manuel de offsetLeft, ça ne
+  // peut pas finir "recalé" sur la page voisine par le scroll-snap du CSS.
+  page.scrollIntoView({behavior: smooth===false ? 'auto' : 'smooth', inline: 'center', block: 'nearest'});
   activeIndex = i;
   persistActiveIndex();
   $$('.dot').forEach((d,idx)=> d.classList.toggle('active', idx===i));
